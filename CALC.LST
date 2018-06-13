@@ -1,0 +1,156 @@
+0000-                 4 
+02E7-                 5 LETECLA .EQ 02E7H ; 
+0363-                 6 MOSTRAD .EQ 0363H ;
+036E-                 7 MOSTRAA .EQ 036EH ;
+0000-                 8 
+2000-                 9         .OR 2000H
+2000-                10 
+2000-31 00 22        11         LXI SP,2200H    ; Inicializa pilha
+2003-                12 
+2003-CD 94 20        13 LOOP:   CALL NUMERO
+2006-57              14         MOV D,A
+2007-1E 00           15         MVI E,0H
+2009-D5              16         PUSH D
+200A-CD 63 03        17         CALL MOSTRAD    ; Apresenta primeiro numero
+200D-3E 00           18         MVI A,00H
+200F-CD 6E 03        19         CALL MOSTRAA    ; Zera display
+2012-D1              20         POP D
+2013-CD 94 20        21         CALL NUMERO     ; Le segundo numero
+2016-5F              22         MOV E,A
+2017-D5              23         PUSH D
+2018-CD 63 03        24         CALL MOSTRAD    ; Apresenta os dois números
+201B-D1              25         POP D
+201C-                26 
+201C-CD E7 02        27 LOOPOP: CALL LETECLA
+201F-FE 0A           28         CPI 0AH
+2021-CA 36 20        29         JZ CONTS        ; Soma
+2024-FE 0B           30         CPI 0BH
+2026-CA 3C 20        31         JZ CONTM        ; Subtracao
+2029-FE 0C           32         CPI 0CH
+202B-CA 4A 20        33         JZ CONTX        ; Multiplicacao
+202E-FE 0D           34         CPI 0DH
+2030-CA 60 20        35         JZ CONTD        ; Divisao
+2033-C3 1C 20        36         JMP LOOPOP
+2036-                37 
+2036-CD A2 20        38 CONTS:  CALL MAIS       ; Realiza operação de soma
+2039-C3 8E 20        39         JMP CALC        ; Exibe o resultado
+203C-                40         
+203C-3E 00           41 CONTM:  MVI A,00H
+203E-82              42         ADD D
+203F-BB              43         CMP E
+2040-DA 7B 20        44         JC ERRO         ; Verifica se n1 < n2
+2043-                45 
+2043-42              46         MOV B,D
+2044-CD 9D 20        47         CALL MENOS      ; Realiza operação de subtracao
+2047-C3 8E 20        48         JMP CALC        ; Exibe o resultado
+204A-                49 
+204A-3E 00           50 CONTX:  MVI A,00H
+204C-82              51         ADD D
+204D-FE 00           52         CPI 00H
+204F-CA 83 20        53         JZ ZERO         ; Verifica se n1 = 0
+2052-3E 00           54         MVI A,00H
+2054-83              55         ADD E
+2055-FE 00           56         CPI 00H
+2057-CA 83 20        57         JZ ZERO         ; verifica se n2 = 0
+205A-                58 
+205A-CD A8 20        59         CALL MULT       ; Realiza operação de multiplicacao
+205D-C3 8E 20        60         JMP CALC        ; Exibe o resultado
+2060-                61 
+2060-3E 00           62 CONTD:  MVI A,00H
+2062-82              63         ADD D
+2063-FE 00           64         CPI 00H
+2065-CA 83 20        65         JZ ZERO         ; verifica se n1 = 0 resultado 0        
+2068-3E 00           66         MVI A,00H
+206A-83              67         ADD E
+206B-FE 00           68         CPI 00H
+206D-CA 7B 20        69         JZ ERRO         ; verificar se n2 = 0 erro na operacao
+2070-FE 01           70         CPI 01H
+2072-CA 88 20        71         JZ DIV1
+2075-                72         
+2075-CD B2 20        73         CALL DIV        ; Realiza operação de divisao
+2078-C3 8E 20        74         JMP CALC        ; Exibe o resultado
+207B-                75 
+207B-3E 00           76 ERRO:   MVI A,00H
+207D-06 01           77         MVI B,01H
+207F-90              78         SUB B
+2080-C3 8E 20        79         JMP CALC        ; Exibe o resultado erro FF
+2083-                80 
+2083-3E 00           81 ZERO:   MVI A,00H
+2085-C3 8E 20        82         JMP CALC        ; Exibe o resultado 0
+2088-                83 
+2088-3E 00           84 DIV1:   MVI A,00H
+208A-82              85         ADD D
+208B-C3 8E 20        86         JMP CALC
+208E-                87 
+208E-CD 6E 03        88 CALC:   CALL MOSTRAA    ; Apresenta resultado
+2091-C3 03 20        89         JMP LOOP
+2094-                90         .ED
+2094-                91 
+2094-                92 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+2094-                93 NUMERO: 
+2094-CD E7 02        94 LOOPL:  CALL LETECLA    ; Le o numero
+2097-FE 0A           95         CPI 0AH
+2099-F2 94 20        96         JP LOOPL        ; Volta se for >9
+209C-C9              97         RET
+209D-                98 
+209D-3E 00           99 MENOS:  MVI A,00H       ; inicialização
+209F-82             100         ADD D           
+20A0-93             101         SUB E           
+20A1-C9             102         RET
+20A2-               103 
+20A2-3E 00          104 MAIS:   MVI A,00H       ; inicialização
+20A4-82             105         ADD D           
+20A5-83             106         ADD E           
+20A6-27             107         DAA             ; Soma BCD corrigida
+20A7-C9             108         RET             ; retorna com o número em A
+20A8-               109 
+20A8-4B             110 MULT:   MOV C,E         ; variavel de decremento
+20A9-3E 00          111         MVI A,00H       ; inicialização
+20AB-               112         
+20AB-82             113 LOOPM:  ADD D           ; Soma N1 ao acumulador
+20AC-27             114         DAA             ; Soma BCD corrigida
+20AD-0D             115         DCR C           ; decrementa o conteúdo de C
+20AE-C2 AB 20       116         JNZ LOOPM       ; Desvia de C = 0
+20B1-C9             117         RET             ; retorna com o número em A
+20B2-               118 
+20B2-26 00          119 DIV:    MVI H,00H       ; inicialização
+20B4-3E 00          120         MVI A,00H
+20B6-82             121         ADD D           
+20B7-BB             122 LOOPD:  CMP E           ; Compara N1 com o N2
+20B8-DA C0 20       123         JC CONTDI       ; Desvia se N1 < N2
+20BB-93             124         SUB E           ; Subtrai acumulador
+20BC-24             125         INR H           ; Incrementa resultado
+20BD-C3 B7 20       126         JMP LOOPD       
+20C0-3E 00          127 CONTDI: MVI A,00H       ; inicialização
+20C2-84             128         ADD H           ; Adiciona resultado ao acumulador
+20C3-C9             129         RET
+
+Symbol table
+
+0000208E=CALC 
+00002060=CONTD 
+000020C0=CONTDI 
+0000203C=CONTM 
+00002036=CONTS 
+0000204A=CONTX 
+000020B2=DIV 
+00002088=DIV1 
+0000207B=ERRO 
+000002E7=LETECLA 
+00002003=LOOP 
+000020B7=LOOPD 
+00002094=LOOPL 
+000020AB=LOOPM 
+0000201C=LOOPOP 
+000020A2=MAIS 
+0000209D=MENOS 
+0000036E=MOSTRAA 
+00000363=MOSTRAD 
+000020A8=MULT 
+00002094=NUMERO 
+00002083=ZERO 
+
+0 Errors in assembly
+Symbol table size $0011E
+Unused memory     $92166
+
